@@ -30,7 +30,9 @@ load_dotenv()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
-ALLOWED_HOSTS = ["localhost", "127.0.0.1","philo-pradipta41-footballnews.pbp.cs.ui.ac.id"]
+
+# Tambahkan IP Android Emulator (10.0.2.2) ke ALLOWED_HOSTS
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "philo-pradipta41-footballnews.pbp.cs.ui.ac.id", "10.0.2.2"]
 CSRF_TRUSTED_ORIGINS = ["https://philo-pradipta41-footballnews.pbp.cs.ui.ac.id"]
 
 # Application definition
@@ -42,12 +44,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Tambahkan aplikasi Anda
     'main',
+    
+    # TAMBAHAN: Aplikasi untuk Autentikasi dan CORS
+    'authentication',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    
+    # TAMBAHAN: CORS Middleware HARUS diletakkan di atas CommonMiddleware
+    'corsheaders.middleware.CorsMiddleware',
+    
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -55,6 +67,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# TAMBAHAN: Pengaturan CORS dan Cookie untuk Integrasi Lintas Domain
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
+
 
 ROOT_URLCONF = 'football_news.urls'
 
