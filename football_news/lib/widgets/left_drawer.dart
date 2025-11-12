@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_news/screens/menu.dart';
+import 'package:football_news/screens/news_entry_list.dart';
 // Jika sudah membuat NewsFormPage, uncomment baris berikut dan sesuaikan pathnya:
 // import 'package:football_news/news_form_page.dart';
 
@@ -63,7 +64,12 @@ class LeftDrawer extends StatelessWidget {
               //   ),
               // );
               // Jika belum ada, tutup drawer saja:
-              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NewsEntryListPage(),
+                ),
+              );
             },
           ),
         ],
