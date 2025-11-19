@@ -14,6 +14,7 @@ jobs:
       
       - name: Get version from pubspec.yaml
         id: version
+        working-directory: ./football_news
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -32,14 +33,14 @@ jobs:
           flutter-version: "3.27.3"
       
       - name: Verify Flutter installation
-        run: |
-          flutter --version
-          flutter doctor -v
+        run: flutter --version
       
       - name: Get packages
+        working-directory: ./football_news
         run: flutter pub get
       
       - name: Build APK
+        working-directory: ./football_news
         run: flutter build apk --split-per-abi
       
       - name: Get current date
@@ -54,7 +55,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: false
-          artifacts: "build/app/outputs/flutter-apk/*.apk"
+          artifacts: "football_news/build/app/outputs/flutter-apk/*.apk"
           body: "Published at ${{ steps.date.outputs.date }}"
           name: "v${{ steps.version.outputs.version }} - ${{ steps.date.outputs.date }}"
           token: ${{ secrets.GITHUB_TOKEN }}
