@@ -4,6 +4,7 @@ on:
     branches: [main]
 permissions:
   contents: write
+
 jobs:
   releases:
     name: Build and Release APK
@@ -11,59 +12,57 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
-      
+
+      # Hapus folder bermasalah SEBELUM setup Flutter dan pub get.
+      # Ini akan mencegah error analysis pada sub-proyek.
+      - name: Clean up unnecessary folders (form_sample)
+        run: |
+          echo "Cleaning up unnecessary folders..."
+          # Hapus sub-folder proyek yang tidak diinginkan di dalam football_news
+          rm -rf football_news/form_sample || true
+          echo "Cleanup completed"
+
       - name: Get version from pubspec.yaml
         id: version
+        # Ganti working-directory agar path-nya relatif terhadap root repository
         working-directory: ./football_news
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Detected version: $VERSION"
-      
+
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: "zulu"
           java-version: "17"
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-      
-      - name: Disable Flutter analytics
-        run: flutter config --no-analytics
-      
+
       - name: Verify Flutter installation
         run: |
+          flutter config --no-analytics
           flutter --version
           dart --version
-      
-      # Bersihkan folder yang tidak diperlukan
-      - name: Clean up unnecessary folders
-        run: |
-          echo "Cleaning up unnecessary folders..."
-          rm -rf football_news/form_sample || true
-          echo "Cleanup completed"
-      
-      - name: Get packages
+
+      - name: Get packages and Analyze code
         working-directory: ./football_news
         run: |
+          echo "Running flutter clean & pub get..."
           flutter clean
           flutter pub get
-      
-      # Analyze code dengan handling error yang baik
-      - name: Analyze code
-        working-directory: ./football_news
-        run: |
+          
           echo "Running Flutter analyze..."
-          flutter analyze --no-fatal-infos || {
-            echo "⚠️ Flutter analyze completed with warnings"
-            echo "Continuing with build process..."
-          }
-        continue-on-error: true
-      
-      # Optional: Check code formatting
+          # Gunakan flag --no-fatal-warnings agar warnings tidak menyebabkan kegagalan build.
+          # Gunakan || true untuk memastikan step ini tidak gagal jika ada warnings.
+          flutter analyze --no-fatal-infos || true
+        # Kita menggunakan '|| true' di dalam run:, jadi 'continue-on-error: true' pada level step tidak diperlukan 
+        # untuk analyze, tapi dipertahankan untuk keamanan jika ada error lain yang ingin diabaikan.
+
+      # Optional: Check code formatting (Biarkan continue-on-error: true agar formatting issues tidak membatalkan build)
       - name: Check code formatting
         working-directory: ./football_news
         run: |
@@ -73,11 +72,11 @@ jobs:
             echo "Run 'dart format .' to fix formatting"
           }
         continue-on-error: true
-      
+
       - name: Build APK
         working-directory: ./football_news
         run: flutter build apk --split-per-abi --release
-      
+
       - name: Decode Keystore
         working-directory: ./football_news
         run: |
@@ -89,7 +88,7 @@ jobs:
             echo "✗ Failed to decode keystore"
             exit 1
           fi
-      
+
       - name: Sign APKs
         working-directory: ./football_news
         run: |
@@ -99,6 +98,10 @@ jobs:
           for apk in build/app/outputs/flutter-apk/*.apk; do
             if [ -f "$apk" ]; then
               echo "Signing: $apk"
+              
+              # Menggunakan zipalign sebelum jarsigner (praktik terbaik)
+              zipalign -v 4 "$apk" "${apk%.apk}-aligned.apk"
+              mv "${apk%.apk}-aligned.apk" "$apk"
               
               jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
                 -keystore release-keystore.jks \
@@ -123,28 +126,31 @@ jobs:
             echo "✗ No APKs were signed"
             exit 1
           fi
-      
+
       - name: Cleanup Keystore
         if: always()
         working-directory: ./football_news
         run: |
           rm -f release-keystore.jks
           echo "✓ Keystore cleaned up"
-      
+
       - name: List signed APKs
         working-directory: ./football_news
         run: |
           echo "📦 Signed APK files:"
           ls -lh build/app/outputs/flutter-apk/*.apk
-      
-      - name: Get current date
-        id: date
-        run: echo "date=$(TZ='Asia/Jakarta' date +'%A %d-%m-%Y %T WIB')" >> $GITHUB_OUTPUT
-      
-      - name: Generate unique tag
-        id: tag
-        run: echo "tag=v${{ steps.version.outputs.version }}-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-      
+          
+      - name: Get current date and tag
+        id: tag_info
+        run: |
+          # Dapatkan data dari step version
+          VERSION="${{ steps.version.outputs.version }}"
+          DATE=$(TZ='Asia/Jakarta' date +'%A %d-%m-%Y %T WIB')
+          TAG="v${VERSION}-$(date +'%Y%m%d%H%M%S')"
+          
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
       - name: Release APK
         uses: ncipollo/release-action@v1
         with:
@@ -153,7 +159,7 @@ jobs:
           body: |
             🚀 **Football News v${{ steps.version.outputs.version }}**
             
-            📅 Published at ${{ steps.date.outputs.date }}
+            📅 Published at ${{ steps.tag_info.outputs.date }}
             
             ## 📦 Available APKs (Signed):
             - **arm64-v8a** - For most modern Android devices (64-bit ARM)
@@ -174,6 +180,6 @@ jobs:
             **Branch:** ${{ github.ref_name }}
           name: "Football News v${{ steps.version.outputs.version }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.tag.outputs.tag }}
+          tag: ${{ steps.tag_info.outputs.tag }}
           draft: false
           prerelease: false
