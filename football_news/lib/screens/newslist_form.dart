@@ -1,3 +1,5 @@
+// football_news/lib/screens/newslist_form.dart
+
 import 'package:flutter/material.dart';
 import 'package:football_news/widgets/left_drawer.dart';
 import 'dart:convert';
@@ -170,8 +172,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // NOTE: backend URL sesuai dengan yang kamu berikan
-                        // Jika menggunakan emulator Android, ganti dengan 10.0.2.2:8000
+                        // URL ke endpoint create-flutter Django
                         final response = await request.postJson(
                           "http://127.0.0.1:8000/create-flutter/",
                           jsonEncode({

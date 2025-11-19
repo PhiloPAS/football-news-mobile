@@ -1,3 +1,5 @@
+// football_news/lib/screens/menu.dart
+
 import 'package:flutter/material.dart';
 import 'package:football_news/widgets/news_card.dart';
 import 'package:football_news/widgets/left_drawer.dart';
@@ -9,6 +11,7 @@ class MyHomePage extends StatelessWidget {
   final String nama = 'Philo Pradipta Adhi Satriya';
   final String kelas = 'F';
 
+  // Daftar item menu yang akan ditampilkan di GridView
   final List<ItemHomepage> items = [
     ItemHomepage("See Football News", Icons.newspaper),
     ItemHomepage("Add News", Icons.add),
@@ -18,7 +21,8 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: LeftDrawer(),
+      // Menggunakan LeftDrawer sebagai side menu
+      drawer: const LeftDrawer(),
       appBar: AppBar(
         title: const Text(
           'Football News',
@@ -34,6 +38,7 @@ class MyHomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Kartu Informasi (NPM, Nama, Kelas)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -56,6 +61,7 @@ class MyHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // GridView untuk tombol menu utama
                   GridView.count(
                     primary: true,
                     padding: const EdgeInsets.all(20),
@@ -77,6 +83,7 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
+// Widget untuk menampilkan kartu informasi (NPM, Nama, Kelas)
 class InfoCard extends StatelessWidget {
   final String title;
   final String content;
@@ -88,6 +95,7 @@ class InfoCard extends StatelessWidget {
     return Card(
       elevation: 2.0,
       child: Container(
+        // Menyesuaikan lebar agar pas di layar
         width: MediaQuery.of(context).size.width / 3.5,
         padding: const EdgeInsets.all(16.0),
         child: Column(

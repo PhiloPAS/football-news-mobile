@@ -1,3 +1,5 @@
+// football_news/lib/widgets/news_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:football_news/screens/newslist_form.dart';
 import 'package:football_news/screens/news_entry_list.dart';
@@ -25,7 +27,6 @@ class ItemCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () async {
-          // Tampilkan snackbar singkat saat tombol ditekan
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
@@ -43,7 +44,7 @@ class ItemCard extends StatelessWidget {
               ),
             );
 
-          // Navigasi ke halaman daftar berita
+            // Navigasi ke halaman daftar berita
           } else if (item.name == "See Football News") {
             Navigator.push(
               context,
@@ -52,11 +53,9 @@ class ItemCard extends StatelessWidget {
               ),
             );
 
-          // ===== Tambahan fitur Logout =====
+            // Fitur Logout
           } else if (item.name == "Logout") {
-            // TODO: Ganti URL ini sesuai dengan URL backend kamu
-            // Jika memakai emulator Android → http://10.0.2.2:8000/auth/logout/
-            // Jika menjalankan di Chrome/web → http://127.0.0.1:8000/auth/logout/
+            // URL Logout
             final response = await request.logout(
               "http://127.0.0.1:8000/auth/logout/",
             );
@@ -67,7 +66,7 @@ class ItemCard extends StatelessWidget {
                 String uname = response["username"];
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("$message See you again, $uname."),
+                    content: Text("$message Sampai jumpa, $uname."),
                   ),
                 );
                 Navigator.pushReplacement(

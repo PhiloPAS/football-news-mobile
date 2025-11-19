@@ -1,3 +1,5 @@
+// football_news/lib/screens/news_detail.dart
+
 import 'package:flutter/material.dart';
 import 'package:football_news/models/news_entry.dart';
 
@@ -7,7 +9,7 @@ class NewsDetailPage extends StatelessWidget {
   const NewsDetailPage({super.key, required this.news});
 
   String _formatDate(DateTime date) {
-    // Simple date formatter without intl package
+    // Simple date formatter
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${date.day} ${months[date.month - 1]} ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
@@ -25,9 +27,10 @@ class NewsDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail image
+            // Thumbnail image menggunakan proxy dari Django
             if (news.thumbnail.isNotEmpty)
               Image.network(
+                // Menggunakan localhost:8000 untuk proxy image
                 'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(news.thumbnail)}',
                 width: double.infinity,
                 height: 250,

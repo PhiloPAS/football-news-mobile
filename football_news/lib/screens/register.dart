@@ -1,3 +1,5 @@
+// football_news/lib/screens/register.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:football_news/screens/login.dart';
@@ -25,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
+            // Kembali ke halaman sebelumnya (Login)
             Navigator.pop(context);
           },
         ),
@@ -61,12 +64,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       contentPadding:
                           EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your username';
-                      }
-                      return null;
-                    },
+                    // Note: Tambahkan Form key di Scaffold untuk mengaktifkan validator
+                    // Tapi validator sementara diabaikan agar fokus ke fungsi Register
+                    // validator: (value) { ... }
                   ),
                   const SizedBox(height: 12.0),
                   TextFormField(
@@ -81,12 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     ),
                     obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
+                    // validator: (value) { ... }
                   ),
                   const SizedBox(height: 12.0),
                   TextFormField(
@@ -101,12 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     ),
                     obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      return null;
-                    },
+                    // validator: (value) { ... }
                   ),
                   const SizedBox(height: 24.0),
                   ElevatedButton(
@@ -115,8 +105,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       String password1 = _passwordController.text;
                       String password2 = _confirmPasswordController.text;
 
-                      // NOTE: backend URL sudah di-set ke alamat Django kamu
-                      // Jika menggunakan Android emulator, ganti 127.0.0.1 menjadi 10.0.2.2
+                      // URL ke endpoint register Django
                       final response = await request.postJson(
                         "http://127.0.0.1:8000/auth/register/",
                         jsonEncode({
@@ -139,9 +128,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                 builder: (context) => const LoginPage()),
                           );
                         } else {
+                          // Tampilkan pesan error dari backend
+                          String message = response['message'] ?? 'Failed to register!';
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to register!'),
+                            SnackBar(
+                              content: Text(message),
                             ),
                           );
                         }

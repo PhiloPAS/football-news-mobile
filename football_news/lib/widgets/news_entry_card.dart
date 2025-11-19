@@ -1,3 +1,5 @@
+// football_news/lib/widgets/news_entry_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:football_news/models/news_entry.dart';
 
@@ -29,9 +31,10 @@ class NewsEntryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Thumbnail
+                // Thumbnail menggunakan proxy image dari Django
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
+                  // Menggunakan localhost:8000 untuk proxy image
                   child: Image.network(
                     'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(news.thumbnail)}',
                     height: 150,

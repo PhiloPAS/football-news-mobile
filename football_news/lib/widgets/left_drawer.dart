@@ -1,8 +1,9 @@
+// football_news/lib/widgets/left_drawer.dart
+
 import 'package:flutter/material.dart';
 import 'package:football_news/screens/menu.dart';
 import 'package:football_news/screens/news_entry_list.dart';
-// Jika sudah membuat NewsFormPage, uncomment baris berikut dan sesuaikan pathnya:
-// import 'package:football_news/news_form_page.dart';
+import 'package:football_news/screens/newslist_form.dart'; // Import NewsFormPage
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -56,14 +57,20 @@ class LeftDrawer extends StatelessWidget {
             leading: const Icon(Icons.post_add),
             title: const Text('Add News'),
             onTap: () {
-              // Jika NewsFormPage sudah dibuat, ganti komentar berikut dengan:
-              // Navigator.pushReplacement(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => NewsFormPage(),
-              //   ),
-              // );
-              // Jika belum ada, tutup drawer saja:
+              // Navigasi ke halaman form NewsFormPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NewsFormPage(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.newspaper),
+            title: const Text('See News List'),
+            onTap: () {
+              // Navigasi ke halaman daftar berita
               Navigator.push(
                 context,
                 MaterialPageRoute(
