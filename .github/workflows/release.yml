@@ -13,12 +13,6 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
-      - name: Clean up unnecessary folders (form_sample)
-        run: |
-          echo "Cleaning up unnecessary folders..."
-          rm -rf football_news/form_sample || true
-          echo "Cleanup completed"
-
       - name: Get version from pubspec.yaml
         id: version
         working-directory: ./football_news
@@ -53,8 +47,7 @@ jobs:
             echo "Error: Build Tools directory not found. Check if the SDK is fully installed."
             exit 1
           fi
-      # --- END FIX ---
-
+      
       - name: Verify Flutter installation
         run: |
           flutter config --no-analytics
@@ -64,12 +57,18 @@ jobs:
       - name: Get packages and Analyze code
         working-directory: ./football_news
         run: |
+          # Perbaikan: Hapus folder bermasalah SEBELUM pub get
+          echo "Cleaning up unnecessary folders..."
+          rm -rf form_sample || true
+          echo "Cleanup completed"
+          
           echo "Running flutter clean & pub get..."
           flutter clean
           flutter pub get
           
           echo "Running Flutter analyze..."
-          flutter analyze --no-fatal-infos || true
+          # Perbaikan: Gunakan flutter analyze . untuk memastikan analisis hanya di working directory
+          flutter analyze . --no-fatal-infos || true
 
       - name: Check code formatting
         working-directory: ./football_news
@@ -179,7 +178,7 @@ jobs:
             3. Install the downloaded APK
             
             ### 🔐 Security:
-            ✓ All APKs are digitally signed and verified
+            ✓ All APKs are digitally signed dan verified
             
             ---
             
