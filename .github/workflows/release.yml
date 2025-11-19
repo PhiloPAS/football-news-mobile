@@ -30,7 +30,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          # Tidak specify version, akan otomatis pakai stable terbaru
       
       - name: Disable Flutter analytics
         run: flutter config --no-analytics
@@ -40,34 +39,103 @@ jobs:
           flutter --version
           dart --version
       
+      # Bersihkan folder yang tidak diperlukan
+      - name: Clean up unnecessary folders
+        run: |
+          echo "Cleaning up unnecessary folders..."
+          rm -rf football_news/form_sample || true
+          echo "Cleanup completed"
+      
       - name: Get packages
         working-directory: ./football_news
-        run: flutter pub get
+        run: |
+          flutter clean
+          flutter pub get
+      
+      # Analyze code dengan handling error yang baik
+      - name: Analyze code
+        working-directory: ./football_news
+        run: |
+          echo "Running Flutter analyze..."
+          flutter analyze --no-fatal-infos || {
+            echo "⚠️ Flutter analyze completed with warnings"
+            echo "Continuing with build process..."
+          }
+        continue-on-error: true
+      
+      # Optional: Check code formatting
+      - name: Check code formatting
+        working-directory: ./football_news
+        run: |
+          echo "Checking code formatting..."
+          dart format --set-exit-if-changed . || {
+            echo "⚠️ Code formatting issues found"
+            echo "Run 'dart format .' to fix formatting"
+          }
+        continue-on-error: true
       
       - name: Build APK
         working-directory: ./football_news
-        run: flutter build apk --split-per-abi
+        run: flutter build apk --split-per-abi --release
       
       - name: Decode Keystore
         working-directory: ./football_news
-        run: echo "${{ secrets.KEY_JKS }}" | base64 -d > release-keystore.jks
+        run: |
+          echo "Decoding keystore..."
+          echo "${{ secrets.KEY_JKS }}" | base64 -d > release-keystore.jks
+          if [ -f release-keystore.jks ]; then
+            echo "✓ Keystore decoded successfully"
+          else
+            echo "✗ Failed to decode keystore"
+            exit 1
+          fi
       
       - name: Sign APKs
         working-directory: ./football_news
         run: |
+          echo "Signing APKs..."
+          SIGNED_COUNT=0
+          
           for apk in build/app/outputs/flutter-apk/*.apk; do
-            echo "Signing $apk..."
-            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-              -keystore release-keystore.jks \
-              -storepass "${{ secrets.KEY_PASSWORD }}" \
-              -keypass "${{ secrets.KEY_PASSWORD }}" \
-              "$apk" release
+            if [ -f "$apk" ]; then
+              echo "Signing: $apk"
+              
+              jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+                -keystore release-keystore.jks \
+                -storepass "${{ secrets.KEY_PASSWORD }}" \
+                -keypass "${{ secrets.KEY_PASSWORD }}" \
+                "$apk" release
+              
+              # Verify signature
+              if jarsigner -verify -verbose -certs "$apk"; then
+                echo "✓ Successfully signed and verified: $apk"
+                SIGNED_COUNT=$((SIGNED_COUNT + 1))
+              else
+                echo "✗ Failed to sign: $apk"
+                exit 1
+              fi
+            fi
           done
+          
+          echo "Total APKs signed: $SIGNED_COUNT"
+          
+          if [ $SIGNED_COUNT -eq 0 ]; then
+            echo "✗ No APKs were signed"
+            exit 1
+          fi
       
       - name: Cleanup Keystore
         if: always()
         working-directory: ./football_news
-        run: rm -f release-keystore.jks
+        run: |
+          rm -f release-keystore.jks
+          echo "✓ Keystore cleaned up"
+      
+      - name: List signed APKs
+        working-directory: ./football_news
+        run: |
+          echo "📦 Signed APK files:"
+          ls -lh build/app/outputs/flutter-apk/*.apk
       
       - name: Get current date
         id: date
@@ -82,7 +150,30 @@ jobs:
         with:
           allowUpdates: false
           artifacts: "football_news/build/app/outputs/flutter-apk/*.apk"
-          body: "Published at ${{ steps.date.outputs.date }}"
-          name: "v${{ steps.version.outputs.version }} - ${{ steps.date.outputs.date }}"
+          body: |
+            🚀 **Football News v${{ steps.version.outputs.version }}**
+            
+            📅 Published at ${{ steps.date.outputs.date }}
+            
+            ## 📦 Available APKs (Signed):
+            - **arm64-v8a** - For most modern Android devices (64-bit ARM)
+            - **armeabi-v7a** - For older Android devices (32-bit ARM)
+            - **x86_64** - For Android emulators and x86 devices
+            
+            ### 📥 Installation:
+            1. Download the APK suitable for your device architecture
+            2. Enable "Install from Unknown Sources" in Settings → Security
+            3. Install the downloaded APK
+            
+            ### 🔐 Security:
+            ✓ All APKs are digitally signed and verified
+            
+            ---
+            
+            **Commit:** ${{ github.sha }}
+            **Branch:** ${{ github.ref_name }}
+          name: "Football News v${{ steps.version.outputs.version }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: false
