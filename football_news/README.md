@@ -22,4 +22,4 @@ samples, guidance on mobile development, and a full API reference.
 [![Build Status](https://app.bitrise.io/app/9ad7c221-a19a-4de9-9733-f2e1d26e32ad/status.svg?token=b2NKjqHM3STV1VLgK9qBuA&branch=main)](https://app.bitrise.io/app/9ad7c221-a19a-4de9-9733-f2e1d26e32ad)
 
 ## Download
-Download aplikasi versi terbaru: https://app.bitrise.io/app/9ad7c221-a19a-4de9-9733-f2e1d26e32ad/installable-artifacts/3de481d7d33f7119/public-install-page/d893b23d05e0b48d6e1ec453a5c2a5c1
+Download aplikasi versi terbaru: https://app.bitrise.io/app/9ad7c221-a19a-4de9-9733-f2e1d26e32ad/installable-artifacts/295f66127a39f72e/public-install-page/6ca24122d16580c33b17965e13b5a21f
