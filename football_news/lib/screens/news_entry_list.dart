@@ -7,7 +7,6 @@ import 'package:football_news/widgets/left_drawer.dart';
 import 'package:football_news/widgets/news_entry_card.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
 
 class NewsEntryListPage extends StatefulWidget {
   const NewsEntryListPage({super.key});
