@@ -1,107 +1,62 @@
+# This is a basic workflow to help you get started with Actions
 name: Release
 
+# Controls when the workflow will run
 on:
+  # Triggers the workflow on push events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
 
+# Permissions needed for creating releases
 permissions:
   contents: write
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  # This workflow contains a single job called "Build and Release APK"
   releases:
     name: Build and Release APK
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repo
+      - name: Checkout the code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Determine app directory (prefer football-news-mobile)
-        id: find_app
-        run: |
-          # prefer explicit folder if present
-          if [ -d "football-news-mobile" ]; then
-            app_dir="football-news-mobile"
-          else
-            # find first pubspec.yaml
-            app_path=$(find . -name pubspec.yaml -not -path "./.pub-cache/*" -print -quit || true)
-            if [ -z "$app_path" ]; then
-              echo "No pubspec.yaml found in repo!"
-              exit 1
-            fi
-            app_dir=$(dirname "$app_path")
-            app_dir=${app_dir#./}
-            # fallback to '.' if pubspec is in repo root
-            if [ -z "$app_dir" ]; then app_dir="."; fi
-          fi
-          echo "app_dir=$app_dir" >> $GITHUB_OUTPUT
-
-      - name: Debug: show app_dir & pubspec head
-        run: |
-          echo "Using app_dir=${{ steps.find_app.outputs.app_dir }}"
-          ls -la "${{ steps.find_app.outputs.app_dir }}" || true
-          echo "First lines of pubspec.yaml:"
-          sed -n '1,30p' "${{ steps.find_app.outputs.app_dir }}/pubspec.yaml" || true
+      - name: Get version from pubspec.yaml
+        id: version
+        run: echo "::set-output name=version::$(grep "version:" pubspec.yaml | cut -c10-)"
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'
+          channel: "stable"
 
-      - name: Install dependencies (flutter pub get)
-        working-directory: ${{ steps.find_app.outputs.app_dir }}
+      - name: Get packages
         run: flutter pub get
 
-      - name: Build APK (split per ABI)
-        working-directory: ${{ steps.find_app.outputs.app_dir }}
-        run: flutter build apk --split-per-abi --no-shrink
+      - name: Build APK
+        run: flutter build apk --split-per-abi
 
-      - name: Read version from pubspec.yaml
-        id: version
-        run: |
-          app_dir="${{ steps.find_app.outputs.app_dir }}"
-          version_line=$(grep -m 1 '^version:' "$app_dir/pubspec.yaml" || true)
-          if [ -z "$version_line" ]; then
-            echo "version=unknown" >> $GITHUB_OUTPUT
-          else
-            version_value=$(echo "$version_line" | sed -E 's/^version:[[:space:]]*//;s/[[:space:]]*$//')
-            echo "version=$version_value" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Get current date (Asia/Jakarta)
+      - name: Get current date
         id: date
-        run: |
-          dt=$(TZ='Asia/Jakarta' date +'%A %d-%m-%Y %T WIB')
-          echo "date=$dt" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=date::$(TZ='Asia/Jakarta' date +'%A %d-%m-%Y %T WIB')"
 
       - name: Generate unique tag
         id: tag
-        run: |
-          ver="${{ steps.version.outputs.version }}"
-          if [ -z "$ver" ]; then ver="unknown"; fi
-          ts=$(date +'%Y%m%d%H%M%S')
-          tag="v${ver}-${ts}"
-          echo "tag=$tag" >> $GITHUB_OUTPUT
-
-      - name: List APKs (debug)
-        run: |
-          echo "Looking for APKs in ${{ steps.find_app.outputs.app_dir }}/build/app/outputs/flutter-apk"
-          ls -la "${{ steps.find_app.outputs.app_dir }}/build/app/outputs/flutter-apk" || true
+        run: echo "::set-output name=tag::v${{ steps.version.outputs.version }}-$(date +'%Y%m%d%H%M%S')"
 
       - name: Release APK
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: false
-          artifacts: "${{ steps.find_app.outputs.app_dir }}/build/app/outputs/flutter-apk/*.apk"
+          artifacts: "build/app/outputs/flutter-apk/*.apk"
           body: "Published at ${{ steps.date.outputs.date }}"
-          name: "${{ steps.tag.outputs.tag }} - ${{ steps.date.outputs.date }}"
+          name: "v${{ steps.version.outputs.version }} - ${{ steps.date.outputs.date }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.tag.outputs.tag }}
-
